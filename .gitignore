@@ -14,3 +14,7 @@ venv/
 # IDE
 .vscode/
 .idea/
+
+# データベースバックアップは含める
+!database_backup.sql
+!product_sake_backup.sql
