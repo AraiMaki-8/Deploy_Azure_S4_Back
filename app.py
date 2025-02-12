@@ -59,7 +59,7 @@ async def get_product(product_code: str):
                 CODE as product_code,
                 NAME as product_name,
                 PRICE as product_price
-            FROM m_product_sake
+            FROM m_product_sake_shm
             WHERE CODE = %s
             LIMIT 1
         """, (product_code,))
@@ -92,7 +92,7 @@ async def create_transaction(transaction: Transaction):
 
         # 商品の存在確認
         cursor.execute(
-            "SELECT PRICE FROM 商品マスタ WHERE CODE = %s",
+            "SELECT PRICE FROM m_product_sake_shm WHERE CODE = %s",
             (transaction.product_code,)
         )
         product = cursor.fetchone()
@@ -116,7 +116,7 @@ async def create_transaction(transaction: Transaction):
         cursor.execute("""
             INSERT INTO 取引明細 (TRD_ID, PRD_CODE, PRD_NAME, PRD_PRICE)
             SELECT %s, CODE, NAME, PRICE
-            FROM m_product_sake
+            FROM m_product_sake_shm
             WHERE CODE = %s
         """, (trd_id, transaction.product_code))
 
