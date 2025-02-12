@@ -6,6 +6,7 @@ from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
+from db_control.CONNECT import db_config  # 追加
 
 # FastAPI のインスタンス作成
 app = FastAPI()
@@ -13,22 +14,16 @@ app = FastAPI()
 # CORSの設定（Next.jsからのリクエストを許可）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # フロントエンドのURL
+    allow_origins=[
+        "http://localhost:3000",  # ローカル開発用
+        "https://tech0-gen8-step4-pos-app-81.azurewebsites.net"  # Azure上のフロントエンドURL
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 load_dotenv()
-
-# MySQL 接続設定
-db_config = {
-    "host": os.getenv("DB_HOST", "127.0.0.1"),
-    "user": os.getenv("DB_USER", "root"),
-    "password": os.getenv("DB_PASSWORD"),
-    "database": os.getenv("DB_NAME", "my_database"),
-    "port": int(os.getenv("DB_PORT", "3306"))
-}
 
 # Pydanticモデル
 class Product(BaseModel):
