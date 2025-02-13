@@ -166,4 +166,8 @@ async def test_db():
         if 'conn' in locals() and conn.is_connected():
             conn.close()
 
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
 
