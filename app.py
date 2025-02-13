@@ -14,10 +14,7 @@ app = FastAPI()
 # CORSの設定（Next.jsからのリクエストを許可）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # ローカル開発用
-        "https://tech0-gen8-step4-pos-app-81.azurewebsites.net"  # Azure上のフロントエンドURL
-    ],
+    allow_origins=["*"],  # すべてのオリジンを許可 (開発時のみ推奨)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -136,11 +133,36 @@ async def create_transaction(transaction: Transaction):
 @app.get("/test-db")
 async def test_db():
     try:
+        print("接続開始...")  # デバッグ用
         conn = mysql.connector.connect(**db_config)
-        return {"message": "Database connection successful"}
-    except mysql.connector.Error as err:
-        return {"error": str(err)}
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")  # 簡単なクエリを実行
+        result = cursor.fetchone()
+        
+        # SSL情報を安全に取得
+        ssl_info = "SSL使用中" if db_config.get("ssl_ca") else "SSL未使用"
+        
+        return {
+            "message": "Database connection successful",
+            "test_query": result[0] if result else None,
+            "ssl": ssl_info,
+            "config": {  # 接続設定を表示（パスワードは除く）
+                "host": db_config["host"],
+                "user": db_config["user"],
+                "database": db_config["database"],
+                "port": db_config["port"]
+            }
+        }
+    except Exception as e:
+        print(f"エラー発生: {str(e)}")  # デバッグ用
+        return {
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "error_details": getattr(e, 'msg', str(e))
+        }
     finally:
+        if 'cursor' in locals():
+            cursor.close()
         if 'conn' in locals() and conn.is_connected():
             conn.close()
 
