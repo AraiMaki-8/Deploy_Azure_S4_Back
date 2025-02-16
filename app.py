@@ -14,7 +14,10 @@ app = FastAPI()
 # CORSの設定（Next.jsからのリクエストを許可）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # すべてのオリジンを許可 (開発時のみ推奨)
+    allow_origins=[
+        "http://localhost:3000",  # ローカル開発環境
+        "https://tech0-gen8-step4-pos-app-81.azurewebsites.net"  # 本番フロントエンド
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
