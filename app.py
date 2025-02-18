@@ -18,7 +18,7 @@ app.add_middleware(
         "http://localhost:3000",  # ローカル開発環境
         "https://tech0-gen8-step4-pos-app-81.azurewebsites.net"  # 本番フロントエンド
     ],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -90,7 +90,7 @@ async def create_transaction(transaction: Transaction):
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
 
-        # 商品の存在確認
+        # 商品の存在確認と価格取得
         cursor.execute(
             "SELECT PRICE FROM m_product_sake_shm WHERE CODE = %s",
             (transaction.product_code,)
@@ -99,22 +99,28 @@ async def create_transaction(transaction: Transaction):
         if not product:
             raise HTTPException(status_code=404, detail="商品が見つかりません")
 
-        # 取引データの作成
+        # 合計金額の計算
         total_amount = product[0] * transaction.quantity
         current_time = datetime.now()
 
         # 取引テーブルに登録
         cursor.execute("""
-            INSERT INTO 取引 (DATETIME, EMP_CD, STORE_CD, POS_NO, TOTAL_AMT)
+            INSERT INTO m_product_sake_tri (DATETIME, EMP_CD, STORE_CD, POS_NO, TOTAL_AMT)
             VALUES (%s, %s, %s, %s, %s)
-        """, (current_time, transaction.emp_cd, transaction.store_cd, 
-              transaction.pos_no, total_amount))
+        """, (
+            current_time,
+            transaction.emp_cd or '9999999999',
+            '30',
+            '90',
+            total_amount
+        ))
         
+        # 取引IDの取得
         trd_id = cursor.lastrowid
 
         # 取引明細テーブルに登録
         cursor.execute("""
-            INSERT INTO 取引明細 (TRD_ID, PRD_CODE, PRD_NAME, PRD_PRICE)
+            INSERT INTO m_product_sake_mei (TRD_ID, PRD_CODE, PRD_NAME, PRD_PRICE)
             SELECT %s, CODE, NAME, PRICE
             FROM m_product_sake_shm
             WHERE CODE = %s
